@@ -4,6 +4,9 @@ services:
     image: jet_case_study:latest
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data  
     ports:
       - "8080:8080"
+    environment:
+      - AIRFLOW_CONN_XKCD=sqlite:////opt/airflow/data/xkcd.db
     command: airflow standalone

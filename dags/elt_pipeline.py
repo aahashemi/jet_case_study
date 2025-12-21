@@ -1,21 +1,16 @@
-# from airflow import DAG
-# from airflow.operators.python import PythonOperator
-# from airflow.providers.sqlite.hooks.sqlite import SqliteHook
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook 
+from datetime import datetime, timedelta
 from utils.database import DatabaseManager
 from utils.api_client import XkcdClient
-from airflow.utils.models import Base, ComicRaw
-import sqlalchemy as sa
-from sqlalchemy.orm import Session
+from utils.models import ComicRaw
 from loguru import logger
 
-def ingest_comic(db_manager, comic_id):
-    
-    # hook = SqliteHook(sqlite_conn_id='xkcd')
-    # engine = hook.get_sqlalchemy_engine()
 
-    pass
+def sync_xkcd_comics(db_manager):
 
-def sync_comics(db_manager, client):
+    client = XkcdClient()
     sql = f"SELECT MAX(num) FROM {ComicRaw.__tablename__}"
 
     latest_db_comic = db_manager.execute_query(sql).scalar() or 0
@@ -41,18 +36,37 @@ def sync_comics(db_manager, client):
             db_manager.insert_record(ComicRaw, data_map=data_map)
           
     logger.info(f"Comics are synced")
-    return 
+     
 
 def main():
-    engine = sa.create_engine("sqlite:///data/xkcd.db")
-
+    
+    hook = SqliteHook(sqlite_conn_id='xkcd')
+    engine = hook.get_sqlalchemy_engine()
     db_manager = DatabaseManager(engine)
     db_manager.initialize_warehouse()
-
-    client = XkcdClient()
-    sync_comics(db_manager, client)
-
-
+    sync_xkcd_comics(db_manager)
     
-if __name__ == "__main__":
-    main()
+    
+default_args = {
+    'owner': 'amir_hashemi',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+
+with DAG(
+    'elt_dag',
+    default_args=default_args,
+    schedule='*/5 * * * 1,3,5', 
+    start_date=datetime(2025, 1, 1),
+    max_active_runs=1, 
+    catchup=False
+) as dag:
+
+    ingest_task = PythonOperator(
+        task_id='extract_load_xkcd_comics',
+        python_callable=main
+    )

@@ -1,8 +1,12 @@
 from abc import ABC, abstractmethod
-from ..utils.models import Base
+from .models import Base
 from sqlalchemy.orm import sessionmaker
 import sqlalchemy as sa
 from loguru import logger
+import sys
+
+logger.remove()  
+logger.add(sys.stdout, level="INFO") 
 
 class DatabaseManager:
     def __init__(self, engine):
@@ -22,7 +26,7 @@ class DatabaseManager:
             new_record = model_class(**data_map)
             session.add(new_record)
             session.commit()
-            logger.debug(f"Inserted new record into {model_class.__tablename__}: {data_map}")
+            logger.info(f"Inserted new record into {model_class.__tablename__}: {data_map}")
         return 
     
     def execute_query(self, query_text: str, params: dict = None):
