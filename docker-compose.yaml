@@ -9,4 +9,5 @@ services:
       - "8080:8080"
     environment:
       - AIRFLOW_CONN_XKCD=sqlite:////opt/airflow/data/xkcd.db
+      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
     command: airflow standalone
