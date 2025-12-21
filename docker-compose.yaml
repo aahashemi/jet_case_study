@@ -1,0 +1,9 @@
+version: '3'
+services:
+  airflow:
+    image: jet_case_study:latest
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports:
+      - "8080:8080"
+    command: airflow standalone

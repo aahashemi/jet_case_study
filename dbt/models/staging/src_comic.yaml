@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: raw_comic_data_source
+    schema: main
+    description: "Raw data landed by Airflow from the XKCD API"
+    tables:
+      - name: raw_comic
+        description: "The landing table containing the raw_json column"
