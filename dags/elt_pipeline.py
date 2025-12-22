@@ -63,7 +63,8 @@ with DAG(
     schedule='*/5 * * * 1,3,5', 
     start_date=datetime(2025, 1, 1),
     max_active_runs=1, 
-    catchup=False
+    catchup=False,
+    is_paused_upon_creation=False
 ) as dag:
 
     ingest_task = PythonOperator(
