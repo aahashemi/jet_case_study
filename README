@@ -20,4 +20,4 @@
     Open your browser and navigate to `http://localhost:8080`
 
 ## Requirements
-- Docker Engine active and running before executing the build script
+- Docker Engine must be active and running before executing the build script
