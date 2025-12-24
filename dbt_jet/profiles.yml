@@ -1,0 +1,12 @@
+duckdb_profile:
+  outputs:
+    dev:
+      type: duckdb
+      # path: 'C:\Users\User\Desktop\jet_case_study\data\xkcd.duckdb'
+      path: '/opt/airflow/data/xkcd.duckdb'
+      threads: 1
+      extensions:
+        - httpfs
+        - parquet
+
+  target: dev
