@@ -1,6 +1,6 @@
-apache-airflow-providers-sqlite
-SQLAlchemy
 loguru
 requests
 dbt-core
-dbt-sqlite
+dbt-duckdb
+pandas
+pyarrow
