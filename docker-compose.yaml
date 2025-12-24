@@ -1,6 +1,7 @@
 version: '3'
 services:
   airflow:
+    build: .
     image: jet_case_study:latest
     volumes:
       - ./dags:/opt/airflow/dags
