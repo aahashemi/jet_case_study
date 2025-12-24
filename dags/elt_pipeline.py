@@ -1,61 +1,68 @@
+import os
 from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.providers.sqlite.hooks.sqlite import SqliteHook 
-from datetime import datetime, timedelta
-from utils.database import DatabaseManager
+from airflow.providers.standard.operators.python import PythonOperator, ShortCircuitOperator
+from airflow.providers.standard.operators.bash import BashOperator
+from airflow.sdk import Variable 
+from datetime import datetime, timedelta, timezone
+import pandas as pd
 from utils.api_client import XkcdClient
-from utils.models import ComicRaw
 from loguru import logger
 
+DBT_PROJECT_DIR = "/opt/airflow/dbt_jet"
+LANDING_ZONE_PATH = "/opt/airflow/data/landing/"
+LATEST_PROCESSED_VAR = "xkcd_last_processed_num"
 
-def sync_xkcd_comics(db_manager):
 
+def set_varible(value):
+    Variable.set(LATEST_PROCESSED_VAR, str(value))
+
+def extract_and_load_xkcd_comics():
+
+    latest_processed_comic = int(Variable.get(LATEST_PROCESSED_VAR, default="0"))
     client = XkcdClient()
-    sql = f"SELECT MAX(num) FROM {ComicRaw.__tablename__}"
-
-    latest_db_comic = db_manager.execute_query(sql).scalar() or 0
 
     latest_api_comic = client.fetch_latest().json()['num']
 
-    if latest_api_comic> latest_db_comic:
-        logger.info(f"Syncing from {latest_db_comic + 1} to {latest_api_comic}...")
-
-        for comic_id in range(latest_db_comic + 1, latest_api_comic + 1):
-
-            response = client.fetch_by_id(comic_id)
-
-            data_map= {
-                "num": comic_id, 
-                "raw_json": {}, 
-                "ingestion_status": response.status_code
-            }
-
-            if response.status_code == 200:
-                data_map['raw_json'] = response.json()
-            
-            db_manager.insert_record(ComicRaw, data_map=data_map)
-          
-    logger.info(f"Comics are synced")
-     
-
-def main():
+    if latest_api_comic <= latest_processed_comic:
+        logger.info("No new comics to sync")
+        return False
     
-    hook = SqliteHook(sqlite_conn_id='xkcd')
-    engine = hook.get_sqlalchemy_engine()
-    db_manager = DatabaseManager(engine)
-    db_manager.initialize_warehouse()
-    sync_xkcd_comics(db_manager)
     
+    new_records = []
+    for comic_num in range(latest_processed_comic+1, latest_api_comic+1):
+        logger.info(f"Processing comic #{comic_num}")
+        response = client.fetch_by_id(comic_num)
+
+        data_map = {
+            "comic_num": comic_num, 
+            "raw_json": response.json() if response.status_code == 200 else {}, 
+            "http_status": response.status_code,
+            "ingestion_time": datetime.now(timezone.utc)
+        }
+        new_records.append(data_map)
+    
+    df = pd.DataFrame(new_records)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    file_path = os.path.join(LANDING_ZONE_PATH, f"xkcd_{timestamp}.parquet")
+    df.to_parquet(file_path, index=False)
+
+    set_varible(latest_api_comic)
+    logger.info(f"Saved update to {file_path}")
+
+    return True
+    
+
+def has_data(ti):
+    return ti.xcom_pull(
+        task_ids="extract_and_load_xkcd_comics"
+    )
     
 default_args = {
     'owner': 'amir_hashemi',
     'depends_on_past': False,
-    'email_on_failure': False,
-    'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }
-
 
 with DAG(
     'elt_dag',
@@ -67,7 +74,19 @@ with DAG(
     is_paused_upon_creation=False
 ) as dag:
 
-    ingest_task = PythonOperator(
-        task_id='extract_load_xkcd_comics',
-        python_callable=main
+    extract_and_load_task = PythonOperator(
+        task_id='extract_and_load_xkcd_comics',
+        python_callable=extract_and_load_xkcd_comics
     )
+
+    check_data_loaded = ShortCircuitOperator(
+        task_id="check_has_data",
+        python_callable=has_data,
+    )
+
+    transform_task = BashOperator( 
+        task_id="transform_xkcd_comics",
+        bash_command=f"cd {DBT_PROJECT_DIR} && dbt run && dbt test" 
+    )
+    
+    extract_and_load_task >> check_data_loaded >> transform_task
