@@ -86,7 +86,7 @@ with DAG(
 
     transform_task = BashOperator( 
         task_id="transform_xkcd_comics",
-        bash_command=f"cd {DBT_PROJECT_DIR} && dbt run && dbt test" 
+        bash_command=f"cd {DBT_PROJECT_DIR} && dbt deps && dbt run && dbt test" 
     )
     
     extract_and_load_task >> check_data_loaded >> transform_task
