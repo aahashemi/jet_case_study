@@ -4,10 +4,13 @@ services:
     image: jet_case_study:latest
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./data:/opt/airflow/data  
+      - ./data:/opt/airflow/data
+      - ./dbt_jet:/opt/airflow/dbt_jet
+      
     ports:
       - "8080:8080"
     environment:
       - AIRFLOW_CONN_XKCD=sqlite:////opt/airflow/data/xkcd.db
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
+      - DBT_PROFILES_DIR=/opt/airflow/dbt_jet
     command: airflow standalone
