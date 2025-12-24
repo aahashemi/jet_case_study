@@ -1,0 +1,7 @@
+sources:
+  - name: landing_zone
+    tables:
+      - name: raw_comic
+        config:
+          # external_location: "../data/landing/*.parquet"
+          external_location: "/opt/airflow/data/landing/*.parquet"

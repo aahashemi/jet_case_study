@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: dim_comic
+    columns:
+      - name: comic_num
+        tests:
+          - unique
+          - not_null
+           
+      - name: safe_title
+        tests:
+          - not_null  
+
+  # tests for the fact_comic_cost model    
+  - name: fact_comic_cost
+    columns:
+      - name: comic_num
+        tests:
+          - unique
+          - not_null
+          - relationships: 
+              arguments:
+                to: ref('dim_comic')
+                field: comic_num
+
+  # tests for the fact_comic_view model    
+  - name: fact_comic_view
+    columns:
+      - name: comic_num
+        tests:
+          - unique
+          - not_null
+          - relationships: 
+              arguments:
+                to: ref('dim_comic')
+                field: comic_num
+                
+      - name: total_views
+        tests:
+          - not_null
+
+  # tests for the fact_comic_review model    
+  - name: fact_comic_review
+    columns:
+      - name: comic_num
+        tests:
+          - unique
+          - not_null
+          - relationships: 
+              arguments:
+                to: ref('dim_comic')
+                field: comic_num
+
+      - name: customer_review_rating
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1.0
+                max_value: 10.0
+          
+          
