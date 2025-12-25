@@ -36,7 +36,7 @@ models:
                 to: ref('dim_comic')
                 field: comic_num
                 
-      - name: total_views
+      - name: total_view
         tests:
           - not_null
 
@@ -52,12 +52,10 @@ models:
                 to: ref('dim_comic')
                 field: comic_num
 
-      - name: customer_review_rating
+      - name: total_rating
         tests:
           - not_null
           - dbt_utils.accepted_range:
               arguments:
                 min_value: 1.0
                 max_value: 10.0
-          
-          

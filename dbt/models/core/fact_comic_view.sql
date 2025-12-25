@@ -4,7 +4,7 @@
 
 SELECT
     d.comic_num,
-    round(random() * 10000, 0) as total_views,
+    round(random() * 10000, 0) as total_view,
 FROM {{ ref('dim_comic') }} d
 
 {% if is_incremental() %}
