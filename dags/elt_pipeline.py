@@ -8,7 +8,7 @@ import pandas as pd
 from utils.api_client import XkcdClient
 from loguru import logger
 
-DBT_PROJECT_DIR = "/opt/airflow/dbt_jet"
+DBT_PROJECT_DIR = "/opt/airflow/dbt"
 LANDING_ZONE_PATH = "/opt/airflow/data/landing/"
 LATEST_PROCESSED_VAR = "xkcd_last_processed_num"
 
