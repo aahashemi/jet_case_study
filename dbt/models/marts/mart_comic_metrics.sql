@@ -16,9 +16,9 @@ SELECT
     fv.total_view,
     fr.total_rating
 FROM {{ ref('dim_comic') }} d
-LEFT JOIN {{ ref('fact_comic_cost') }} fc 
+LEFT JOIN {{ ref('fct_comic_cost') }} fc 
     ON d.comic_num = fc.comic_num
-LEFT JOIN {{ ref('fact_comic_view') }} fv 
+LEFT JOIN {{ ref('fct_comic_view') }} fv 
     ON d.comic_num = fv.comic_num
-LEFT JOIN {{ ref('fact_comic_review') }} fr 
+LEFT JOIN {{ ref('fct_comic_review') }} fr 
     ON d.comic_num = fr.comic_num

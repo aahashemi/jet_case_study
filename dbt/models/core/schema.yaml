@@ -12,8 +12,8 @@ models:
         tests:
           - not_null  
 
-  # tests for the fact_comic_cost model    
-  - name: fact_comic_cost
+  # tests for the fct_comic_cost model    
+  - name: fct_comic_cost
     columns:
       - name: comic_num
         tests:
@@ -24,8 +24,8 @@ models:
                 to: ref('dim_comic')
                 field: comic_num
 
-  # tests for the fact_comic_view model    
-  - name: fact_comic_view
+  # tests for the fct_comic_view model    
+  - name: fct_comic_view
     columns:
       - name: comic_num
         tests:
@@ -40,8 +40,8 @@ models:
         tests:
           - not_null
 
-  # tests for the fact_comic_review model    
-  - name: fact_comic_review
+  # tests for the fct_comic_review model    
+  - name: fct_comic_review
     columns:
       - name: comic_num
         tests:

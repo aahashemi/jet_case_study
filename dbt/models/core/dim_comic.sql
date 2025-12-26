@@ -16,7 +16,7 @@ with comic_ranked as (
                partition by comic_num
                order by processed_time desc
            ) as rn
-    from {{ ref('stage_comic') }}
+    from {{ ref('stg_xkcd__comic') }}
     where http_status = 200 and comic_num is not null
 ),
 
